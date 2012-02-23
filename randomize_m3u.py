@@ -3,6 +3,7 @@ configuration_file_directory = 'C:\\Users\\Scott\\'
 
 import ConfigParser
 import datetime
+import gmailer
 import os
 import random
 import subprocess
@@ -107,6 +108,8 @@ print email_body
 file_writer.write('')
 
 print 'songList contains {0} songs'.format(total_songs)
+
+gmailer.mail(prowl_address, email_title, email_body, gmail_user, gmail_pwd)
 
 connection.commit()
 file_writer.close()
