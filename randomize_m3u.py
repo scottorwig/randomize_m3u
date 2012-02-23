@@ -1,5 +1,5 @@
 #!/usr/bin/python
-configuration_file_path = r'C:\Users\Scott\randomize_m3u.cfg'
+configuration_file_directory = 'C:\\Users\\Scott\\'
 
 import ConfigParser
 import datetime
@@ -11,17 +11,20 @@ import sys
 import smtplib
 import time
 
+configuration_file = os.path.join(configuration_file_directory, 'randomize_m3u.cfg')
+database_file = os.path.join(configuration_file_directory, 'randomize_m3u.db')
+
 config = ConfigParser.ConfigParser()
 
-if config.read(configuration_file_path):
-    print 'Reading config file at {0}'.format(configuration_file_path)
+if config.read(configuration_file):
+    print 'Reading config file at {0}'.format(configuration_file)
     path_to_vlc = config.get('vlc','path')
     itunes_library_path = config.get('itunes','library_path')
     gmail_user = config.get('gmail','user')
     gmail_pwd = config.get('gmail','pwd')
     prowl_address = config.get('prowl','address')
 else:
-    print 'No config file found at {0}'.format(configuration_file_path)
+    print 'No config file found at {0}'.format(configuration_file)
     
 generated_playlist_filename = 'generated_playlist.m3u'
 
@@ -43,7 +46,7 @@ if len(sys.argv) > 1:
 source_directory = os.path.dirname(source_playlist_path)
 source_playlist_name = os.path.basename(source_playlist_path)
 today = datetime.datetime.now()
-today_iso = today.strftime("%Y-%m-%d_%H-%M")
+now_iso = today.strftime("%Y-%m-%d_%H-%M")
 generated_playlist_path = os.path.join(source_directory,generated_playlist_filename)
 print 'Playlist of {0} minutes will be generated from {1} at {2}'.format(playlist_minutes, source_playlist_path, generated_playlist_path)
 
@@ -74,13 +77,25 @@ for m3u_line in line_at_a_time:
 random.shuffle(song_list)
 
 file_writer.write('#EXTM3U\n')
-email_title = 'Selections from playlist {0} for {1}\n'.format(source_playlist_name,today_iso)
+email_title = 'Selections from playlist {0} for {1}\n'.format(source_playlist_name,now_iso)
 email_body = ''
 total_minutes = 0
 total_songs = 0
 i = 0
+
+connection = None
+connection = sqlite3.connect(database_file)
+cur = connection.cursor()  
+cur.execute('CREATE TABLE IF NOT EXISTS plays (id INTEGER PRIMARY KEY, title TEXT, path TEXT, playlist TEXT, date TEXT)')
+
+
 while total_minutes < (playlist_minutes):
     file_writer.write('#EXTINF:' + song_list[i][1] + ',' + song_list[i][0] + '\n' + song_list[i][2] + '\n')
+    title = song_list[i][0].replace("'","")
+    path = song_list[i][2].replace("'","")
+    sql = "INSERT INTO plays (title, path, playlist, date) VALUES ('{0}', '{1}', '{2}', '{3}');".format(title,path,source_playlist_name, now_iso)
+    print sql
+    cur.execute(sql)
     total_minutes = total_minutes + (int(song_list[i][1])/60)
     song_email_line = song_list[i][0] + '\n'
     email_body += song_email_line
@@ -88,12 +103,15 @@ while total_minutes < (playlist_minutes):
     total_songs = total_songs + 1
 print email_body
 
+
 file_writer.write('')
 
 print 'songList contains {0} songs'.format(total_songs)
 
+connection.commit()
 file_writer.close()
 file_reader.close()
+connection.close()
 
 # Careful in formatting the argument strings. From the online docs:
 # Windows users have to use the --option-name="value" syntax instead of the --option-name value syntax.
