@@ -1,0 +1,14 @@
+This project requires a configuration file with the following format:
+
+[itunes]
+library_path:
+
+[vlc]
+path:
+
+[gmail]
+user:
+pwd:
+
+[prowl]
+address:
