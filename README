@@ -1,3 +1,16 @@
+Given an m3u file as exported by iTunes
+* reads the file
+* creates a new randomized list of the given number of minutes
+* writes the new list
+* opens the list in VLC Media Player (http://www.videolan.org/)
+
+VLC should have the following options set:
+* In Tools:Settings(choose Show Settings ALL):Playlist: Set "Play and exit" and "Auto start"
+* In Tools:Settings(choose Show Settings Simple):Audio: Always reset audio start level to [your choice]
+
+To specify the sound card to use:
+* In Tools:Settings(choose Show Settings Simple):Audio: Output module: DirectX Audio Output then specify the "Device"
+
 This project requires a configuration file with the following format:
 
 [itunes]

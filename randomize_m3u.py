@@ -1,4 +1,7 @@
 #!/usr/bin/python
+"""
+Given an m3u playlist as exported from iTunes, create a new randomized list of a specified duration and play it in VLC Media Player
+"""
 
 import ConfigParser
 import datetime
@@ -8,7 +11,6 @@ import random
 import subprocess
 import sqlite3
 import sys
-import smtplib
 import time
 
 configuration_file = 'randomize_m3u.cfg'
