@@ -11,7 +11,6 @@ import random
 import subprocess
 import sqlite3
 import sys
-import datetime
 
 CONFIGURATION_FILE = 'randomize_m3u.cfg'
 DATABASE_FILE = 'randomize_m3u.db'
@@ -51,18 +50,19 @@ class PlayistRandomizer():
         self.now_iso = now.strftime("%Y-%m-%d_%H-%M")
         self.file_reader = open(full_path_to_source_playist, 'r')
         self.line_at_a_time = self.file_reader.readlines()
-        self.file_writer = open(self.generated_playlist_path, 'w')        
+        self.file_writer = open(self.generated_playlist_path, 'w')
+        self.sqlite_connection = None
+        self.sqlite_connection = sqlite3.connect(DATABASE_FILE)
+        self.sqlite_cursor = self.sqlite_connection.cursor()         
 
-    def generate_playlist(self, source_playlist_path, GENERATED_PLAYLIST_FILENAME, playlist_minutes, DATABASE_FILE, GMAIL_USER, PROWL_ADDRESS, GMAIL_PASSWORD, PATH_TO_VLC):
+    def generate_playlist(self):
         """ """
-        source_playlist_name = os.path.basename(source_playlist_path)
-        today = datetime.datetime.now()
-        print 'Playlist of {0} minutes will be generated from {1} at {2}'.format(playlist_minutes, source_playlist_path, generated_playlist_path)
-    
+        print 'Minutes:', self.number_of_minutes_in_new_playlist
+        print 'Source:', self.source_playlist_path
+        print 'Generated:', self.generated_playlist_path
         
-    
         song_list = []
-        for m3u_line in line_at_a_time:
+        for m3u_line in self.line_at_a_time:
             if m3u_line[0:7] == '#EXTM3U':
                 print 'Found the first line'
             elif m3u_line[0:8] == '#EXTINF:':
@@ -71,34 +71,33 @@ class PlayistRandomizer():
                 track_seconds = split_m3u_line[0].replace('\n','')
                 track_title = split_m3u_line[1].replace('\n','')
             else:
-                track_path_with_line_ending = m3u_line
-                track_path = track_path_with_line_ending.replace('\n','')
-                song_list.append([track_title, track_seconds, track_path])
+                original_track_path_with_line_ending = m3u_line
+                original_track_path = original_track_path_with_line_ending.replace('\n','')
+                new_track_path = original_track_path.replace(ORIGINAL_ITUNES_MUSIC_DIRECTORY, self.music_directory)
+                song_list.append([track_title, track_seconds, new_track_path])
                 track_seconds = ''
                 track_title = ''
-                track_path = ''
+                new_track_path = ''
     
         random.shuffle(song_list)
     
-        file_writer.write('#EXTM3U\n')
-        email_title = 'Selections from playlist {0} for {1}\n'.format(source_playlist_name,now_iso)
+        self.file_writer.write('#EXTM3U\n')
+        email_title = 'Selections from playlist {0} for {1}\n'.format(self.source_playlist_name, self.now_iso)
         email_body = ''
         total_minutes = 0
         total_songs = 0
         i = 0
     
-        connection = None
-        connection = sqlite3.connect(DATABASE_FILE)
-        cur = connection.cursor()  
-        cur.execute('CREATE TABLE IF NOT EXISTS plays (id INTEGER PRIMARY KEY, title TEXT, path TEXT, playlist TEXT, date TEXT)')
+         
+        self.sqlite_cursor.execute('CREATE TABLE IF NOT EXISTS plays (id INTEGER PRIMARY KEY, title TEXT, path TEXT, playlist TEXT, date TEXT)')
     
-        while total_minutes < (playlist_minutes):
-            file_writer.write('#EXTINF:' + song_list[i][1] + ',' + song_list[i][0] + '\n' + song_list[i][2] + '\n')
+        while total_minutes < (self.number_of_minutes_in_new_playlist):
+            self.file_writer.write('#EXTINF:' + song_list[i][1] + ',' + song_list[i][0] + '\n' + song_list[i][2] + '\n')
             title = song_list[i][0].replace("'","")
             path = song_list[i][2].replace("'","")
-            sql = "INSERT INTO plays (title, path, playlist, date) VALUES ('{0}', '{1}', '{2}', '{3}');".format(title,path,source_playlist_name, now_iso)
+            sql = "INSERT INTO plays (title, path, playlist, date) VALUES ('{0}', '{1}', '{2}', '{3}');".format(title,path, self.source_playlist_name, self.now_iso)
             print sql
-            cur.execute(sql)
+            self.sqlite_cursor.execute(sql)
             total_minutes = total_minutes + (int(song_list[i][1])/60)
             song_email_line = song_list[i][0] + '\n'
             email_body += song_email_line
@@ -106,26 +105,22 @@ class PlayistRandomizer():
             total_songs = total_songs + 1
         print email_body
     
-        file_writer.write('')
+        self.file_writer.write('')
     
         print 'songList contains {0} songs'.format(total_songs)
     
         gmailer.mail(PROWL_ADDRESS, email_title, email_body, GMAIL_USER, GMAIL_PASSWORD)
     
-        connection.commit()
-        file_writer.close()
-        file_reader.close()
-        connection.close()
+        self.sqlite_connection.commit()
+        self.sqlite_connection.close()
+        self.file_writer.close()
+        self.file_reader.close()
     
         # Careful in formatting the argument strings. From the online docs:
         # Windows users have to use the --option-name="value" syntax instead of the --option-name value syntax.
-        player_args = [PATH_TO_VLC, '--play-and-exit', generated_playlist_path]
-        print 'player args are {0}'.format(player_args)
+        player_args = [PATH_TO_VLC, '--play-and-exit', self.generated_playlist_path]
         p = subprocess.Popen(player_args)
 
 if __name__ == "__main__":
     randomizer = PlayistRandomizer(SOURCE_PLAYLIST_PATH, PLAYLIST_MINUTES, GENERATED_PLAYLIST_FILENAME, ORIGINAL_ITUNES_MUSIC_DIRECTORY)
-    print randomizer
-    print randomizer.source_playlist_path
-    print randomizer.source_playlist_name
-    print randomizer.music_directory
+    randomizer.generate_playlist()
