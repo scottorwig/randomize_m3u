@@ -1,5 +1,4 @@
 #!/usr/bin/python
-configuration_file_directory = 'C:\\Users\\Scott\\'
 
 import ConfigParser
 import datetime
@@ -12,8 +11,8 @@ import sys
 import smtplib
 import time
 
-configuration_file = os.path.join(configuration_file_directory, 'randomize_m3u.cfg')
-database_file = os.path.join(configuration_file_directory, 'randomize_m3u.db')
+configuration_file = 'randomize_m3u.cfg'
+database_file = 'randomize_m3u.db'
 
 config = ConfigParser.ConfigParser()
 
