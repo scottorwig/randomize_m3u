@@ -26,6 +26,9 @@ original_itunes_music_directory:
 [vlc]
 path:
 
+[database]
+path:
+
 [gmail]
 user:
 pwd:

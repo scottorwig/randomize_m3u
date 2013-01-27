@@ -11,9 +11,9 @@ import random
 import subprocess
 import sqlite3
 import sys
+import time
 
-CONFIGURATION_FILE = 'randomize_m3u.cfg'
-DATABASE_FILE = 'randomize_m3u.db'
+CONFIGURATION_FILE = r'C:\Users\Scott\Desktop\randomize_m3u\randomize_m3u.cfg'
 GENERATED_PLAYLIST_FILENAME = 'randomize_m3u_generated_playlist.m3u'
 
 config = ConfigParser.ConfigParser()
@@ -22,12 +22,14 @@ if config.read(CONFIGURATION_FILE):
     print 'Reading config file at {0}'.format(CONFIGURATION_FILE)
     PATH_TO_VLC = config.get('vlc','path')
     ORIGINAL_ITUNES_MUSIC_DIRECTORY = config.get('itunes','original_itunes_music_directory')
+    DATABASE_FILE = config.get('database','path')
     GMAIL_USER = config.get('gmail','user')
     GMAIL_PASSWORD = config.get('gmail','pwd')
     PROWL_ADDRESS = config.get('prowl','address')
 else:
     print 'No config file found at {0}'.format(CONFIGURATION_FILE)
-
+print 'Configs parsed. Sleeping for 5 seconds.'
+time.sleep(5)
 
 if len(sys.argv) > 1:
     print sys.argv
@@ -53,7 +55,9 @@ class PlayistRandomizer():
         self.file_writer = open(self.generated_playlist_path, 'w')
         self.sqlite_connection = None
         self.sqlite_connection = sqlite3.connect(DATABASE_FILE)
-        self.sqlite_cursor = self.sqlite_connection.cursor()         
+        self.sqlite_cursor = self.sqlite_connection.cursor()
+        print '__init__ run. Sleeping for 5 seconds'
+        time.sleep(5)
 
     def generate_playlist(self):
         """ """
