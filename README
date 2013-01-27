@@ -11,6 +11,13 @@ VLC should have the following options set:
 To specify the sound card to use:
 * In Tools:Settings(choose Show Settings Simple):Audio: Output module: DirectX Audio Output then specify the "Device"
 
+
+Execute with two parameters:
+* Full path to the iTunes-exported playlist
+* Number of minutes for the resulting randomized playlist
+
+i.e. >randomize_m3u.py "C:\Users\Scott\Music\iTunes\iTunes Media\Music\morning_playlist.m3u" 120
+
 This project requires a configuration file with the following format:
 
 [itunes]
