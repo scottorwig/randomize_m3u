@@ -21,7 +21,7 @@ i.e. >randomize_m3u.py "C:\Users\Scott\Music\iTunes\iTunes Media\Music\morning_p
 This project requires a configuration file with the following format:
 
 [itunes]
-library_path:
+original_itunes_music_directory:
 
 [vlc]
 path:
